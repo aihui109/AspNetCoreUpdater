@@ -110,10 +110,10 @@ namespace AspNetCoreUpdater
             iisAppPoolName = null;
             try
             {
-                string ini = runPath + "AspNetCoreUpdaterForWindow.ini";
+                string ini = runPath + "updater.ini";
                 if (!File.Exists(ini))
                 {
-                    WriteAndExit("Can't find the AspNetCoreUpdaterForWindow.ini");
+                    WriteAndExit("Can't find the updater.ini");
                 }
                 string[] items = File.ReadAllLines(ini);
                 foreach (string item in items)
@@ -133,7 +133,7 @@ namespace AspNetCoreUpdater
                 }
                 if (string.IsNullOrEmpty(zipName) || string.IsNullOrEmpty(iisAppPoolName))
                 {
-                    WriteAndExit("AspNetCoreUpdaterForWindow.ini zipName or iisAppPoolName can't be empty.");
+                    WriteAndExit("updater.ini zipName or iisAppPoolName can't be empty.");
                 }
             }
             catch (Exception err)

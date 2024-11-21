@@ -7,11 +7,12 @@
     <ProjectGuid>{4FCD574D-434C-4224-B915-D6D65D35265A}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <RootNamespace>AspNetCoreUpdater</RootNamespace>
-    <AssemblyName>AspNetCoreUpdater</AssemblyName>
-    <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
+    <AssemblyName>updater</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <TargetFrameworkProfile />
+    <IsWebBootstrapper>false</IsWebBootstrapper>
     <PublishUrl>publish\</PublishUrl>
     <Install>true</Install>
     <InstallFrom>Disk</InstallFrom>
@@ -24,7 +25,6 @@
     <MapFileExtensions>true</MapFileExtensions>
     <ApplicationRevision>0</ApplicationRevision>
     <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
-    <IsWebBootstrapper>false</IsWebBootstrapper>
     <UseApplicationTrust>false</UseApplicationTrust>
     <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
@@ -85,7 +85,7 @@
     <Content Include="dll\ICSharpCode.SharpZipLib.dll" />
     <Content Include="dll\Logo.ico" />
     <None Include="app.config" />
-    <Content Include="AspNetCoreUpdaterForWindow.ini">
+    <Content Include="updater.ini">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="Properties\app.manifest" />
