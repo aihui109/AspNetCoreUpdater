@@ -153,10 +153,10 @@ public class Program
                 var zipEntry = zipStream.GetNextEntry();
                 if (zipEntry == null) { break; }
                 string name = zipEntry.ToString();
-                //if (name.EndsWith(".dll"))
-                //{
+                if (name.EndsWith(".dll"))
+                {
                     fileNames.Add(name);
-                //}
+                }
             }
         }
         catch (Exception err)
