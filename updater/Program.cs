@@ -1,8 +1,5 @@
-﻿using ICSharpCode.SharpZipLib.Zip;
-using System.Diagnostics;
-using System.Net.Http.Headers;
-using System.Reflection;
-using System.Resources;
+﻿using System.Diagnostics;
+using System.IO.Compression;
 
 namespace updater;
 
@@ -147,13 +144,11 @@ public class Program
         List<string> fileNames = [];
         try
         {
-            using ZipInputStream zipStream = new(File.Open(zipFile, FileMode.Open));
-            while (true)
+            using ZipArchive zipStream = ZipFile.OpenRead(zipFile);
+            foreach (ZipArchiveEntry entry in zipStream.Entries)
             {
-                var zipEntry = zipStream.GetNextEntry();
-                if (zipEntry == null) { break; }
-                string name = zipEntry.ToString();
-                if (name.EndsWith(".dll"))
+                string name = entry.FullName;
+                if (name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
                 {
                     fileNames.Add(name);
                 }
@@ -169,8 +164,7 @@ public class Program
     {
         try
         {
-            FastZip fastZip = new();
-            fastZip.ExtractZip(zipFile, toFolder, string.Empty);
+            ZipFile.ExtractToDirectory(zipFile, toFolder, true);
             Thread.Sleep(1000);//等待解压完成。
         }
         catch (Exception err)
