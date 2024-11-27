@@ -148,10 +148,12 @@ public class Program
             foreach (ZipArchiveEntry entry in zipStream.Entries)
             {
                 string name = entry.FullName;
-                if (name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase))
-                {
+                //if (name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
+                //    || name.EndsWith(".pdb", StringComparison.OrdinalIgnoreCase)
+                //    || name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
+                //{
                     fileNames.Add(name);
-                }
+                //}
             }
         }
         catch (Exception err)
