@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel.Design;
+using System.Diagnostics;
 using System.IO.Compression;
 
 namespace updater;
@@ -8,7 +9,14 @@ public class Program
     static readonly string runPath = AppDomain.CurrentDomain.BaseDirectory;
     static void Main(string[] args)
     {
-        Start();
+        if (args?.Contains("-r") == true)
+        {
+            StartRollback();
+        }
+        else
+        {
+            StartUpdate();
+        }
         Console.Read();
     }
 
@@ -23,8 +31,92 @@ public class Program
         Environment.Exit(0);
     }
 
-    static void Start() { StartForWindow(); }
-    static void StartForWindow()
+    static void StartRollback()
+    {
+        Write("1、初始化配置文件中...");
+        InitIni(out string zipName, out string iisAppPoolName);
+        if (!string.IsNullOrEmpty(zipName) && !string.IsNullOrEmpty(iisAppPoolName))
+        {
+            string zipFile = runPath + zipName;
+            if (!File.Exists(zipFile))
+            {
+                WriteAndExit("Can't find the file : " + zipFile);
+            }
+            Write("2、读取Zip文件并回滚中...");
+            List<string> fileNames = GetZipFileNames(zipFile);
+            Write("...");
+            if (fileNames.Count > 0)
+            {
+                try
+                {
+                    foreach (string fileName in fileNames)
+                    {
+                        string oldFile = runPath + fileName;
+                        if (File.Exists(oldFile))
+                        {
+                            string temp = "_" + fileName + ".temp";
+                            File.Move(oldFile, runPath + temp);
+                        }
+                    }
+                }
+                catch (Exception err)
+                {
+                    WriteAndExit(err.Message);
+                }
+            }
+            Write("...");
+            if (fileNames.Count > 0)
+            {
+                try
+                {
+                    foreach (string fileName in fileNames)
+                    {
+                        string bakFile = runPath + "_" + fileName + ".bak";
+                        if (File.Exists(bakFile))
+                        {
+                            File.Move(bakFile, runPath + fileName);
+                        }
+                    }
+                }
+                catch (Exception err)
+                {
+                    WriteAndExit(err.Message);
+                }
+            }
+
+            Write("3、重启 IIS 应用程序池中...");
+            string[] items = iisAppPoolName.Split(',');
+            foreach (var item in items)
+            {
+                ReStartApp(item);
+            }
+            Console.WriteLine("-------------回滚完成-------------");
+            Write("4、等待应用程序结束并清理缓存文件中，预计1分钟左右...");
+            while (true)
+            {
+                Thread.Sleep(3000);
+                try
+                {
+                    string[] files = Directory.GetFiles(runPath, "_*.temp");
+                    foreach (var file in files)
+                    {
+                        File.Delete(file);
+                    }
+                    break;
+                }
+                catch (Exception err)
+                {
+                    Write("...");
+                    Thread.Sleep(3000);
+                }
+            }
+            Thread thread = new(new ThreadStart(Exit));
+            thread.Start();
+            Write("3秒后自动退出。");
+        }
+    }
+
+    static void StartUpdate() 
     {
         Write("1、初始化配置文件中...");
         InitIni(out string zipName, out string iisAppPoolName);
@@ -43,15 +135,13 @@ public class Program
             {
                 try
                 {
-                    int i = 0;
                     foreach (string fileName in fileNames)
                     {
-                        i++;
                         string oldFile = runPath + fileName;
                         if (File.Exists(oldFile))
                         {
-                            string temp = "__" + DateTime.Now.Ticks + i + ".temp";
-                            File.Move(oldFile, runPath + temp);
+                            string temp = "_" + fileName + ".bak";
+                            File.Move(oldFile, runPath + temp, true);
                         }
                     }
                 }
@@ -71,37 +161,19 @@ public class Program
                 ReStartApp(item);
             }
             Console.WriteLine("-------------升级完成-------------");
-            Write("4、等待应用程序结束并清理缓存文件中，预计1分钟左右...");
-            while (true)
-            {
-                Thread.Sleep(3000);
-                try
-                {
-                    string[] files = Directory.GetFiles(runPath, "*.temp");
-                    foreach (var file in files)
-                    {
-                        File.Delete(file);
-                    }
-                    break;
-                }
-                catch (Exception err)
-                {
-                    Write("...");
-                    Thread.Sleep(5000);
-                }
 
-            }
             Thread thread = new(new ThreadStart(Exit));
             thread.Start();
-
-            Write("清理完成，5秒后自动退出。");
+            Write("3秒后自动退出。");
         }
     }
+
     static void Exit()
     {
-        Thread.Sleep(5000);
+        Thread.Sleep(3000);
         Environment.Exit(0);
     }
+
     static void InitIni(out string zipName, out string iisAppPoolName)
     {
         zipName = null;
@@ -148,12 +220,7 @@ public class Program
             foreach (ZipArchiveEntry entry in zipStream.Entries)
             {
                 string name = entry.FullName;
-                //if (name.EndsWith(".dll", StringComparison.OrdinalIgnoreCase)
-                //    || name.EndsWith(".pdb", StringComparison.OrdinalIgnoreCase)
-                //    || name.EndsWith(".exe", StringComparison.OrdinalIgnoreCase))
-                //{
-                    fileNames.Add(name);
-                //}
+                fileNames.Add(name);
             }
         }
         catch (Exception err)
@@ -174,6 +241,7 @@ public class Program
             WriteAndExit(err.Message);
         }
     }
+
     static void ReStartApp(string appPool)
     {
         try
